@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- font -->
+  <link href="https://fonts.googleapis.com/css2?family=Cactus+Classical+Serif&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap" rel="stylesheet">
+
+  <title>jQuery Game</title>
+
+  <style>
+    * {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Creepster", "Cactus Classical Serif", serif;
+    }
+
+    #container {
+      width: 1000px;
+      height: 800px;
+      margin: auto;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      background: url(./images/bg/bg2.jpg) no-repeat center/cover;
+    }
+
+    .imgBG {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #imgWinBG {
+      animation: fade-in 1s 1;
+    }
+
+    #imgLoseBG {
+      object-position: center -410px;
+      animation: fade-in 1s 1;
+    }
+
+
+    #game {
+      width: 750px;
+      height: 550px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      top: 100px;
+      /* border: 1px solid #d1d1d1; */
+    }
+
+    .btn {
+      width: 120px;
+      height: 50px;
+      font-size: 30px;
+      font-weight: bold;
+      box-shadow: 0.5px 0.5px 5px rgb(75, 75, 75);
+      border-radius: 30px;
+      border-style: none;
+      background: rgb(255, 223, 61);
+      position: absolute;
+      cursor: pointer;
+      z-index: 1;
+    }
+
+    #ghost {
+      width: 351px;
+      height: 425px;
+      background: url(./images/ghost/ghost1.png) no-repeat center/cover;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: ghostIn 1s 1;
+
+      /* 圖片不能選擇、拖動 */
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    @keyframes ghostIn {
+      0% {
+        transform: translate(-50%, -80%);
+        opacity: 0;
+      }
+
+      100% {
+        transform: translate(-50%, -50%);
+        opacity: 1;
+      }
+    }
+
+    .displayNone {
+      display: none;
+      transition: 1s;
+    }
+
+    /* 過關或失敗時，出現 */
+    .WinandLose {
+      font-family: "Oswald", sans-serif;
+      font-size: 120px;
+      font-weight: bolder;
+      position: absolute;
+      top: 0px;
+      animation: fade-in 1s 1;
+    }
+
+    .winAnim {
+      animation: winAnim 2s ease 0s 1 normal forwards;
+    }
+
+    .loseAnim {
+      animation: loseAnim 2s ease 0s 1 normal forwards;
+    }
+
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes winAnim {
+
+      0%,
+      100% {
+        transform: rotate(0deg);
+        transform-origin: 0 50%;
+      }
+
+      10% {
+        transform: rotate(2deg);
+      }
+
+      20%,
+      40%,
+      60% {
+        transform: rotate(-4deg);
+      }
+
+      30%,
+      50%,
+      70% {
+        transform: rotate(4deg);
+      }
+
+      80% {
+        transform: rotate(-2deg);
+      }
+
+      90% {
+        transform: rotate(2deg);
+      }
+    }
+
+    @keyframes loseAnim {
+      0% {
+        animation-timing-function: ease-in;
+        opacity: 1;
+        transform: translateY(-45px);
+      }
+
+      24% {
+        opacity: 1;
+      }
+
+      40% {
+        animation-timing-function: ease-in;
+        transform: translateY(-24px);
+      }
+
+      65% {
+        animation-timing-function: ease-in;
+        transform: translateY(-12px);
+      }
+
+      82% {
+        animation-timing-function: ease-in;
+        transform: translateY(-6px);
+      }
+
+      93% {
+        animation-timing-function: ease-in;
+        transform: translateY(-4px);
+      }
+
+      25%,
+      55%,
+      75%,
+      87% {
+        animation-timing-function: ease-out;
+        transform: translateY(0px);
+      }
+
+      100% {
+        animation-timing-function: ease-out;
+        opacity: 1;
+        transform: translateY(0px);
+      }
+    }
+
+    .p {
+      text-align: center;
+      font-size: 1.5rem;
+      color: #fff;
+      text-shadow: 1px 1px 5px #333;
+      position: absolute;
+      z-index: 1;
+    }
+
+    /* 設定"剩餘時間"的位置 */
+    .time {
+      top: 20px;
+    }
+
+    /* 設定"擊退次數"的位置 */
+    .hit {
+      bottom: 160px;
+    }
+
+    .text {
+      font-size: 3rem;
+      padding-right: 8px;
+      color: red;
+    }
+
+    #text-hit2 {
+      color: rgb(255, 216, 43);
+    }
+
+    /* 設定 總擊退次數 的字體大小和位置*/
+    .allHit {
+      width: 100%;
+      font-size: 40px;
+      text-align: center;
+      background: linear-gradient(90deg, transparent 0%, #fff 40%, #fff 60%, transparent 100%);
+      position: absolute;
+      top: 350px;
+    }
+
+    #allHit2 {
+      font-size: 70px;
+      text-shadow: 1px 1px 5px #333;
+      color: rgb(255, 216, 43);
+    }
+
+    #record {
+      width: 300px;
+      height: 130px;
+      border: 1px solid #a7a7a7;
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-content: space-evenly;
+      position: absolute;
+      top: 180px;
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    #record::before {
+      content: "目前最高紀錄";
+      font-size: 1rem;
+      border-radius: 30px;
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 1px 1px 5px #333;
+      padding: 5px 20px;
+      position: absolute;
+      top: -15px;
+    }
+
+    .Rp {
+      height: 50px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: -10px;
+    }
+
+    .Rtext {
+      font-family: serif;
+      font-size: 2.2rem;
+      padding: 0 5px;
+    }
+
+    #items {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      display: flex;
+      align-items: end;
+    }
+
+    .itemArea {
+      width: 1000px;
+      height: 150px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: url(./images/bg/frame.png) no-repeat center;
+    }
+
+    .box {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      box-shadow: 1px 1px 10px #333;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: 1s;
+      cursor: pointer;
+      background: #fff;
+    }
+
+    /* 物品卡翻開*/
+    .itemFront {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      position: absolute;
+      backface-visibility: hidden;
+    }
+
+    /* 物品卡背面*/
+    .itemBack {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      position: absolute;
+      background: url(./images/item/back_questionMark.png) no-repeat center/cover;
+      backface-visibility: hidden;
+      transform: rotateY(180deg);
+      transition: 1s;
+    }
+
+    /* 物品卡翻成背面*/
+    .close {
+      transform: rotateY(180deg);
+      transition: 1s;
+    }
+
+    /* 配對成功，顯示瞄準點 */
+    .cursor1 {
+      cursor: url(./images/effect/sword.png) 50 50, auto;
+    }
+
+    .cursor3 {
+      cursor: url(./images/effect/cross.png) 50 50, auto;
+    }
+
+    .cursor5 {
+      cursor: url(./images/effect/梵文.png) 50 50, auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container">
+    <!-- 闖關失敗時會顯示的圖片 -->
+    <img id="imgLoseBG" class="imgBG displayNone" src="./images/ghost/loser_ghost.jpg">
+    <!-- 闖關成功時會顯示的圖片 -->
+    <img id="imgWinBG" class="imgBG displayNone" src="./images/bg/bg1.jpg">
+
+    <!-- 顯示剩餘時間 -->
+    <p id="text-time1" class="p time displayNone">剩餘時間：<span id="text-time2" class="text">0</span>秒</p>
+    <!-- 顯示擊退次數 -->
+    <p id="text-hit1" class="p hit displayNone">擊退次數：<span id="text-hit2" class="text">0</span>次</p>
+
+    <!-- 目前最高紀錄 -->
+    <div id="record">
+      <p id="Name" class="Rp">紀錄保持人：<span id="text-name" class="Rtext">-</span></p>
+      <p id="highRecord" class="Rp">最高擊退次數：<span id="text-highRecord" class="Rtext">0</span>次</p>
+    </div>
+
+    <!-- 開始按鈕 -->
+    <input type="button" value="Start" id="btnStart" class="btn">
+
+    <!-- 物品區 -->
+    <div id="items">
+      <div id="I" class="itemArea"></div>
+    </div>
+
+    <!-- 遊戲範圍 -->
+    <div id="game"></div>
+
+  </div>
+
+
+  <script src=https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+  <script>
+
+    // 最高紀錄
+    const highRecord = {
+      name: '-',
+      hitCount: 0
+    }
+
+    // 讀取 localStorage 的紀錄
+    if (localStorage.hitGhostRecord) {
+      const data = JSON.parse(localStorage.hitGhostRecord)
+      highRecord.name = data.name
+      highRecord.hitCount = data.hitCount
+      $('#text-name').text(highRecord.name)
+      $('#text-highRecord').text(highRecord.hitCount)
+    }
+
+    // 點擊 Start 按鈕後，按鈕消失
+    $('#btnStart').click(() => {
+      $('#btnStart').attr('style', 'display: none;')
+
+      // 最高紀錄文字消失
+      $('#record').attr('style', 'display: none;')
+
+      // 限定時間15秒
+      let time = 15
+      $('#text-time1').css('display', 'block')
+      $('#text-time2').text(time)  // 讓畫面顯示剩餘時間
+
+      // 擊退次數計算
+      let hitCount = 0
+      $('#text-hit2').text(hitCount)  // 讓畫面顯示擊退次數
+
+      // 移除上一場遊戲的東西，並初始畫面
+      $('#win, #lose, #allHit1').remove()
+      $('#container').removeAttr('style')
+      // $('#game').removeClass('cursor1 cursor3 cursor5')
+      $('#imgWinBG, #imgLoseBG').addClass('displayNone')
+      //item 圖片清除
+      $('#I').empty()
+      $('#text-hit1').css('display', 'block')
+
+      const ghost = $(`<div id = "ghost" class= "displayNone" ></div >`)
+      $('#game').append(ghost)
+
+      // 用 .toggleClass 控制出現 ghost 圖片
+      $('#ghost').toggleClass('displayNone')
+
+
+      // 顯示兩側物品圖示
+      for (let i = 0; i < 6; i++) {
+        $('#I').append(`
+        <div class="box close">
+          <div class="itemFront"></div>
+          <div class="itemBack"></div>
+        </div>
+        `)
+      }
+
+      // 物品放入圖片並給編號
+      $('.box').each(function (index) {
+        $(this).find('.itemFront').css('background', `url(./images/item/${index + 1}.png) no-repeat center/contain`)
+
+        // 給編號 XA 和 XB，方便辨識配對
+        index % 2 === 1 ?
+          $(this).attr('data-number', `${index}`) :
+          $(this).attr('data-number', `${index + 1}`)
+      })
+
+      // 給物品隨機排位置（洗牌）
+      wash()
+
+      // 執行翻牌
+      $('.box').click(function () {
+
+        // 翻開至正面，並移除蓋牌的 class
+        if ($(this).hasClass('close') && $('.box:not(.close)').length < 2) {
+          $(this).removeClass('close')
+        }
+
+        // 翻開第2張，並限制牌面上最多只能兩張翻開的牌
+        if ($('.box:not(.close)').length === 2) {
+
+          // 配對成功，游標變成准芯可擊退 ghost，2秒後蓋牌並移除准芯，且重洗牌
+          if ($('.box:not(.close)').eq(0).attr('data-number') === $('.box:not(.close)').eq(1).attr('data-number')) {
+            let D = $('.box:not(.close)').eq(0).attr('data-number')
+            if (D == 1) {
+              $('#game').addClass('cursor1')
+            } else if (D == 3) {
+              $('#game').addClass('cursor3')
+            } else if (D == 5) {
+              $('#game').addClass('cursor5')
+            }
+
+            setTimeout(() => {
+              $('#game').removeClass('cursor1 cursor3 cursor5')
+              console.log('有執行移除游標')
+              $('.box:not(.close)').addClass('close')
+              setTimeout(() => {
+                wash()
+              }, 500)
+            }, 2000)
+
+            // 配對失敗，設置延遲時間可以看到翻開第2張牌的效果，添加蓋牌的 class
+          } else {
+            setTimeout(() => {
+              $('.box:not(.close)').addClass('close')
+            }, 800)
+          }
+        }
+      })
+
+      // 計時器倒數時間
+      timer = setInterval(function () {
+        time--
+        $('#text-time2').text(time)
+
+        // 當時間=0秒，清除計時器(避免秒數變負數)，並顯示過關文字
+        if (time === 0) {
+          clearInterval(timer)
+
+          // ghost 圖片清除
+          $('#game').empty()
+
+          // 明亮圖片填滿背景
+          $('#imgWinBG').removeClass('displayNone')
+
+          // 增添 You Win 的文字
+          const win = $('<div id="win" class="WinandLose winAnim">You Win ! ! !</div>')
+          $('#game').append(win)
+
+          // 顯示最高紀錄文字
+          $('#record').attr({ style: 'display: flex; top: 290px' })
+
+          // 顯示"總擊退次數"
+          const allHit = $('<p id="allHit1" class="WinandLose allHit">總擊退次數：<span id="allHit2" class="text">0</span>次</p>')
+          $('#game').append(allHit)
+          $('#allHit2').text(hitCount)
+
+          // 隱藏下方的"擊退次數"
+          $('#text-hit1').css('display', 'none')
+
+          // 將 start 按鈕修改顯示成 Replay 按鈕
+          $('#btnStart').attr({
+            style: 'display: block; bottom: 190px',
+            value: 'Replay'
+          })
+
+          // 儲存紀錄至 localStorage
+          if (hitCount > highRecord.hitCount) {
+            const name = prompt('恭喜創新紀錄，請輸入您的大名或暱稱') || '-'
+            highRecord.name = name
+            highRecord.hitCount = hitCount
+
+            $('#text-name').text(highRecord.name)
+            $('#text-highRecord').text(highRecord.hitCount)
+
+            localStorage.hitGhostRecord = JSON.stringify(highRecord)
+          }
+        }
+      }, 1500)
+
+
+      // ghost 圖片隨機移動位置
+      ghostMove(ghost)
+
+      // 每1秒放大一次圖片
+      ghostTimer = setInterval(function () {
+        ghostToBig(ghost)
+
+        // 當 ghost 圖片放大超過限定尺寸，判定遊戲失敗
+        if (parseInt($('#ghost').css('width')) > 600) {
+          console.log(parseInt($('#ghost').css('width')))
+          clearInterval(ghostTimer)
+          console.log('有執行清除計時器1')
+
+          // ghost 圖片停止
+          $('#ghost').stop()
+
+          // ghost 圖片清除
+          $('#game').empty()
+
+          // ghost 圖片填滿背景
+          $('#imgLoseBG').removeClass('displayNone')
+
+          // 清除 timer 的計時器，停止倒數動作
+          clearInterval(timer)
+
+          // 增添 You are Loser 的文字
+          const lose = $('<div id="lose" class="WinandLose loseAnim">You are Loser</div>')
+          $('#game').append(lose)
+
+          // 顯示"總擊退次數"
+          // $('#allHit1').css('display', 'block')
+          const allHit = $('<p id="allHit1" class="WinandLose allHit">總擊退次數：<span id="allHit2" class="text">0</span>次</p>')
+          $('#game').append(allHit)
+          $('#allHit2').text(hitCount)
+
+          // 隱藏下方的"擊退次數"
+          $('#text-hit1').css('display', 'none')
+
+          // 將 start 按鈕修改顯示成 Replay 按鈕
+          $('#btnStart').attr({
+            style: 'display: block; bottom: 190px',
+            value: 'Replay'
+          })
+
+
+          // 當倒數時間=0時，清除 ghostTimer 的計時器
+        } else if (time === 0) {
+          clearInterval(ghostTimer)
+          console.log('有執行清除計時器2')
+        }
+      }, 1000)
+
+      // 擊中 ghost，即會後退（縮小）
+      $('#game').on('click', '#ghost', function () {
+        if ($('#game').hasClass('cursor1') || $('#game').hasClass('cursor3') || $('#game').hasClass('cursor5')) {
+          ghostToMin(ghost)
+          // 每點擊到圖片 = 擊退次數+1
+          hitCount++
+          $('#text-hit2').text(hitCount)
+        }
+      })
+    })
+
+
+
+    // ★★★功能函式★★★：
+
+    // ● 隨機移動位置 function
+    function ghostMove(ghost) {
+      const top = Math.round(Math.random() * 100) + '%'
+      const left = Math.round(Math.random() * 100) + '%'
+      ghost.animate({ top, left }, 2000, () => {
+        ghostMove(ghost)
+      })
+    }
+
+
+    // ● 放大 function
+    function ghostToBig(ghost) {
+      // 放大寬度
+      newWidth = (parseInt($('#ghost').css('width')) * 1.08) + 'px'
+      // 放大高度
+      newHeight = (parseInt($('#ghost').css('height')) * 1.08) + 'px'
+
+      // ghost 圖片消失
+      $('#ghost').toggleClass('displayNone')
+      // ghost 圖片放大
+      $('#ghost').css({ 'width': newWidth, 'height': newHeight })
+      console.log(newWidth)
+    }
+
+
+    // ● 縮小 function
+    function ghostToMin(ghost) {
+      // 縮小寬度
+      newWidth = (parseInt($('#ghost').css('width')) * 0.9) + 'px'
+      // 縮小高度
+      newHeight = (parseInt($('#ghost').css('height')) * 0.9) + 'px'
+
+      // ghost 圖片縮小
+      $('#ghost').css({ 'width': newWidth, 'height': newHeight })
+    }
+
+
+    // ● 物品洗牌 function
+    function wash() {
+      for (let i = 0; i < 10; i++) {
+        const randA = Math.round(Math.random() * 6)
+        const randB = Math.round(Math.random() * 6)
+        $('.box').eq(randA).insertAfter($('.box').eq(randB))
+      }
+    }
+
+  </script>
+</body>
+
+</html>
